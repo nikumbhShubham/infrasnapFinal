@@ -1,0 +1,158 @@
+/* Global Styles */
+.hero-section {
+    position: relative;
+    background: #f9f9f9;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    height: 100vh; /* Full height for the hero section */
+  }
+  
+  /* Navbar */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #1e3a8a;
+    color: white;
+  }
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .nav-links li {
+    cursor: pointer;
+  }
+  
+  .sign-in-btn {
+    background: #3b82f6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  /* Hero Section */
+  .hero-content {
+    position: relative;
+    padding: 5rem 2rem;
+    text-align: center;
+    height: 100%; /* Full height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+  }
+  
+  .main-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .main-content .highlight {
+    color: #3b82f6;
+  }
+  
+  .main-content p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+  }
+  
+  .button-group button {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 0.5rem;
+  }
+  
+  .primary-btn {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  .secondary-btn {
+    background: white;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+  }
+  
+  /* Cards */
+  .card {
+    position: absolute;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .sync-automation-card {
+    top: 10%;
+    left: 5%;
+    width: 200px;
+  }
+  
+  .meet-card {
+    bottom: 10%;
+    left: 5%;
+    width: 200px;
+  }
+  
+  .country-sales-card {
+    top: 10%;
+    right: 5%;
+    width: 200px;
+  }
+  
+  .team-collaboration-card {
+    bottom: 10%;
+    right: 5%;
+    width: 200px;
+  }
+  
+  .avatars {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .avatar {
+    width: 40px;
+    height: 40px;
+    background: #3b82f6;
+    border-radius: 50%;
+  }
+  
+  /* Blue Strips (Both Light and Dark Blue) */
+  .blue-strip {
+    position: absolute;
+    width: 100px;
+    height: 100%;
+    background: #bfdbfe;
+    z-index: 0;
+  }
+  
+  .left-strip {
+    top: 0;
+    left: -50px;
+    transform: rotate(-45deg);
+  }
+  
+  .right-strip {
+    bottom: 0;
+    right: -50px;
+    transform: rotate(45deg);
+    background: #1e3a8a; /* Dark Blue */
+  }
+  
+  footer {
+    background: #f3f4f6;
+    padding: 1rem 0;
+    text-align: center;
+    color: #6b7280;
+  }
+  

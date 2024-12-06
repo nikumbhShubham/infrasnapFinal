@@ -1,0 +1,27 @@
+{
+  "name": "infrasnap",
+  "version": "1.0.0",
+  "main": "/server/index.js",
+  "scripts": {
+    "dev": "nodemon server/index.js",
+    "start": "node server/index.js"
+  },
+  "author": "shubhamNikumbh",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "bootstrap": "^5.3.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "framer-motion": "^11.11.17",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.11.0",
+    "mongoose": "^8.8.3",
+    "nodemon": "^3.1.7",
+    "react-icons": "^5.3.0",
+    "react-intersection-observer": "^9.13.1"
+  }
+}
