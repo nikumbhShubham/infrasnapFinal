@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import logoLight from "@/assets/2.2.svg";
 
-const rotatingWords = [" Engineers", " Developers", " Designers", " Infrasnap"];
+const rotatingWords = [" InfraSnap", " Developers", " Designers", " Infrasnap"];
 
 const useTypewriter = (words, delay = 150) => {
     const [text, setText] = useState("");
@@ -68,8 +69,13 @@ const LoadingScreen = ({ onComplete }) => {
         >
             {/* Centered Animated Text */}
             <div className="flex-grow flex items-center justify-center text-center">
-                <div className="bg-black text-4xl md:text-6xl font-bold mb-8 p-4 text-white tracking-wide">
-                    <span>We are {animatedText}</span>
+            <img
+                    src={logoLight}
+                    alt="Logoipsum"
+                    className="dark:hidden"
+                />
+                <div className="text-4xl md:text-6xl font-bold mb-8 p-4 text-black tracking-wide">
+                    <span>{animatedText}</span>
                     <span className="text-white animate-blink">|</span>
                 </div>
             </div>

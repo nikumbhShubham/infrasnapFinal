@@ -60,10 +60,17 @@ function App() {
             path: "/dashboard",
             element: <Layout />,
             children: [
+<<<<<<< HEAD
                 { path: "page", index: true, element: <Sites /> },
                 { path: "analytics", element: <DailyReportPage /> },
                 { path: "reports", element: <RawMaterialsPage /> },
                 { path: "upload", element: < UploadImagePage /> },
+=======
+                { path: "page", index: true, element: <DashboardPage /> },
+                { path: "Sites", element: <Sites /> },
+                { path: "analytics", element: <DailyReportPage/>  },
+                { path: "reports", element: <h1 className="title">Reports</h1> },
+
                 { path: "customers", element: <h1 className="title">Customers</h1> },
                 { path: "new-customer", element: <h1 className="title">New Customer</h1> },
                 { path: "verified-customers", element: <h1 className="title">Verified Customers</h1> },
