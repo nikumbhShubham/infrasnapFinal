@@ -8,12 +8,17 @@ export const navbarLinks = [
         title: "Dashboard",
         links: [
             {
+                label: "Sites",
+                icon: Home,
+                path: "/dashboard/Sites",
+            },
+            {
                 label: "Dashboard",
                 icon: Home,
                 path: "/dashboard/page",
             },
             {
-                label: "Analytics",
+                label: "Daily Report",
                 icon: ChartColumn,
                 path: "/dashboard/analytics",
             },

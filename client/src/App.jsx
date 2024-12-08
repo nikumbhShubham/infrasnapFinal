@@ -58,6 +58,7 @@ function App() {
             element: <Layout />,
             children: [
                 { path: "page", index: true, element: <DashboardPage /> },
+                { path: "Sites", element: <Sites /> },
                 { path: "analytics", element: <DailyReportPage/>  },
                 { path: "reports", element: <h1 className="title">Reports</h1> },
                 { path: "customers", element: <h1 className="title">Customers</h1> },
