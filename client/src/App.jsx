@@ -21,6 +21,9 @@ import { Auth } from "./Sections/auth";
 import { SignIn } from "./Sections/SignIn";
 import Sites from "./routes/dashboard/Sites";
 import DailyReportPage from "./routes/dashboard/SiteDailyReport";
+import RawMaterialsPage from "./routes/dashboard/RawMaterialsPage";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import UploadImagePage from "./routes/dashboard/UploadImagePage";
 
 function App() {
     const [isLoading, setIsLoading] = useState(true);
@@ -41,14 +44,14 @@ function App() {
         },
         {
             path: "/signin",
-            element: <SignIn  />,
-        }, 
-        
+            element: <SignIn />,
+        },
+
         // {
         //     path: "/form1",
         //     element: <SiteDailyReport />,
         // },
-         {
+        {
             path: "/form2",
             element: <RawMaterial />,
         },
@@ -57,31 +60,35 @@ function App() {
             path: "/dashboard",
             element: <Layout />,
             children: [
-                { path: "page", index: true, element: <DashboardPage /> },
-                { path: "analytics", element: <DailyReportPage/>  },
-                { path: "reports", element: <h1 className="title">Reports</h1> },
+                { path: "page", index: true, element: <Sites /> },
+                { path: "analytics", element: <DailyReportPage /> },
+                { path: "reports", element: <RawMaterialsPage /> },
+                { path: "upload", element: < UploadImagePage /> },
                 { path: "customers", element: <h1 className="title">Customers</h1> },
                 { path: "new-customer", element: <h1 className="title">New Customer</h1> },
                 { path: "verified-customers", element: <h1 className="title">Verified Customers</h1> },
                 { path: "products", element: <h1 className="title">Products</h1> },
                 { path: "new-product", element: <h1 className="title">New Product</h1> },
                 { path: "inventory", element: <h1 className="title">Inventory</h1> },
-                { path: "settings", element: <Settings/> },
+                { path: "settings", element: <Settings /> },
             ],
         },
     ]);
 
     return (
-        <main>
-            <CustomCursor />
-            <ThemeProvider storageKey="theme">
-                {isLoading ? (
-                    <LoadingScreen onComplete={handleLoadingComplete} />
-                ) : (
-                    <RouterProvider router={router} />
-                )}
-            </ThemeProvider>
-        </main>
+        <LanguageProvider>
+
+            <main>
+                <CustomCursor />
+                <ThemeProvider storageKey="theme">
+                    {isLoading ? (
+                        <LoadingScreen onComplete={handleLoadingComplete} />
+                    ) : (
+                        <RouterProvider router={router} />
+                    )}
+                </ThemeProvider>
+            </main>
+        </LanguageProvider>
     );
 }
 

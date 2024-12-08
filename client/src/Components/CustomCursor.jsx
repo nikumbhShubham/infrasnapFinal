@@ -44,7 +44,7 @@ const CustomCursor = () => {
         position: "fixed",
         width: isMoving ? "20px" : "10px", // Size changes based on movement
         height: isMoving ? "20px" : "10px",
-        background: "linear-gradient(to right, #3b43da, #0e449b);",
+        background: "linear-gradient(to right, #3b43da, #0e449b)",
         borderRadius: "50%",
         pointerEvents: "none", // Prevent interaction issues
         zIndex: 1000,

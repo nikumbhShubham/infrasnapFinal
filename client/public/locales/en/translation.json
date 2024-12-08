@@ -1,0 +1,30 @@
+{
+    "navbar": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "resources": "Resources",
+      "integrations": "Integrations",
+      "signup": "Sign Up"
+    },
+    "hero": {
+      "startJourney": "Start your journey",
+      "headline": {
+        "part1": "Snapshot",
+        "part2": "Your",
+        "part3": "Way to Smarter Infrastructure"
+      },
+      "description": "The all-in-one platform that empowers businesses to track, manage, and grow customer connections seamlessly.",
+      "cta": {
+        "getStarted": "Get Started",
+        "scheduleDemo": "Schedule a Demo"
+      }
+    },
+    "about":{
+      "leadDealManagement": "Lead & Deal Management",
+      "seamlessIntegrationHeading": "Seamlessly integrate with the apps",
+      "seamlessIntegrationDescription": "Keep everything in sync, automate tasks, and manage your business from a single, unified platform.",
+      "getStarted": "Get Started"
+    }
+
+  }
+  

@@ -20,7 +20,12 @@ export const navbarLinks = [
             {
                 label: "Reports",
                 icon: NotepadText,
-                path: "/reports",
+                path: "/dashboard/reports",
+            },
+            {
+                label: "upload",
+                icon: NotepadText,
+                path: "/dashboard/upload",
             },
         ],
     },

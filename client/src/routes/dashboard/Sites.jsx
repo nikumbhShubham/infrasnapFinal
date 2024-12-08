@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addSite,setCurrentSite } from "../../redux/Site/siteSlice";
+import { addSite, setCurrentSite,setSites } from "../../redux/Site/siteSlice";
 import { useNavigate } from "react-router-dom";
 import {
-  getFirestore,
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDocs
 } from "firebase/firestore";
 import { db, storage } from "../../config/firebase";
 import {
@@ -17,7 +17,7 @@ import {
 } from "firebase/storage"
 
 const Sites = () => {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const dispatch = useDispatch()
   const user = useSelector((state) => state.user.user);
   const sites = useSelector((state) => state.sites.sites);
@@ -25,15 +25,37 @@ const Sites = () => {
   console.log(user)
 
   // Filter sites by current user's UID
+  useEffect(() => {
+    const fetchSites = async () => {
+      try {
+        const sitesCollectionRef = collection(db, "sites");
+        const querySnapshot = await getDocs(sitesCollectionRef);
+
+        const fetchedSites = querySnapshot.docs.map((doc) => ({
+          id: doc.id, // Include Firestore document ID
+          ...doc.data()
+        }));
+
+        // Dispatch the fetched sites to Redux store
+        dispatch(setSites(fetchedSites));
+      } catch (error) {
+        console.error("Error fetching sites:", error);
+      }
+    };
+
+    fetchSites();
+  }, [dispatch]);
+
+  // Filter sites by current user's UID
   const userSites = sites.filter(site => site.userId === user?.uid);
-  console.log(userSites)
+  // console.log(userSites)
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isContinueModal, setIsContinueModal] = useState(false); // Track which modal is open
   const [buildings, setBuildings] = useState([{ id: 1, floors: 1 }]);
 
   const [formData, setFormData] = useState({
-    siteName: "",
+    // siteName: "",
     city: "",
     state: "",
     country: "",
@@ -65,7 +87,7 @@ const Sites = () => {
     dispatch(setCurrentSite(siteId));
     // Optionally, you could add navigation logic here
     // For example: navigate(`/site/${siteId}`)
-    navigate('/dashboard/analytics')
+    navigate('/dashboard/upload')
   };
 
   // Submit form handler
@@ -198,15 +220,15 @@ const Sites = () => {
       <div className="flex flex-wrap items-center justify-center m-8 p-4 gap-6 h-[400px] overflow-y-scroll border border-gray-300 rounded-lg shadow-lg">
         {/* Dynamic Project Cards */}
         {userSites.map((site) => (
-          <div 
-            key={site.id} 
+          <div
+            key={site.id}
             className="w-[250px] h-[250px] border border-blue-200 rounded-lg shadow-lg hover:shadow-2xl flex flex-col items-center cursor-pointer"
             onClick={() => handleSiteCardClick(site.id)} // Add click handler
           >
-            <img 
-              src={site.sitePlanImageUrl} 
-              alt={site.siteName} 
-              className="p-2 w-full max-w-8xl mx-auto mt-2" 
+            <img
+              src={site.sitePlanImageUrl}
+              alt={site.siteName}
+              className="p-2 w-full max-w-8xl mx-auto mt-2"
             />
             <h2 className="text-xl font-semibold m-4">{site.siteName}</h2>
           </div>

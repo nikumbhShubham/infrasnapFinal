@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { db } from "../../config/firebase";
-import { collection, addDoc, serverTimestamp, query, where, orderBy, } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const DailyReportPage = () => {
   const user = useSelector((state) => state.user.user);
   const site = useSelector((state) => state.sites.currentSite);
 
-  console.log(site)
+  console.log(site.id)
 
   const [dailyReports, setDailyReports] = useState([]);
   const [isReportsVisible, setIsReportsVisible] = useState(false);
@@ -43,27 +45,197 @@ const DailyReportPage = () => {
     }));
   };
 
+  const generateSingleReportPDF = (report) => {
+    const doc = new jsPDF();
+
+    // Set document title
+    doc.setFontSize(18);
+    doc.text(`Daily Report - ${new Date(report.createdAt.toDate()).toLocaleDateString()}`, 14, 20);
+
+    // Site Information
+    doc.setFontSize(12);
+    doc.text(`Site Name: ${report.siteName}`, 14, 30);
+    doc.text(`Number of Staff: ${report.numberOfStaff}`, 14, 37);
+
+    // Contractor Information
+    doc.setFontSize(14);
+    doc.text('Contractor Information', 14, 50);
+    doc.setFontSize(12);
+    doc.text(`Name: ${report.contractorName}`, 14, 57);
+    doc.text(`Type of Work: ${report.typeOfWork}`, 14, 64);
+
+    // Site Tasks
+    let yPosition = 80;
+    doc.setFontSize(14);
+    doc.text('Site Tasks', 14, yPosition);
+    doc.setFontSize(12);
+    report.siteTasks.forEach((task, index) => {
+      yPosition += 7;
+      doc.text(`${index + 1}. ${task.taskName} - Workers: ${task.workers}`, 14, yPosition);
+    });
+
+    // Contractor Tasks
+    yPosition += 14;
+    doc.setFontSize(14);
+    doc.text('Contractor Tasks', 14, yPosition);
+    doc.setFontSize(12);
+    report.contractorTasks.forEach((task, index) => {
+      yPosition += 7;
+      doc.text(`${index + 1}. ${task.taskName}`, 14, yPosition);
+    });
+
+    // Tomorrow's Tasks
+    yPosition += 14;
+    doc.setFontSize(14);
+    doc.text("Tomorrow's Tasks", 14, yPosition);
+    doc.setFontSize(12);
+    report.tomorrowsTasks.forEach((task, index) => {
+      yPosition += 7;
+      doc.text(`${index + 1}. ${task.taskName}`, 14, yPosition);
+    });
+
+    // Visitors
+    if (report.visitors && report.visitors.length > 0) {
+      yPosition += 14;
+      doc.setFontSize(14);
+      doc.text('Visitors', 14, yPosition);
+
+      // Use autoTable for visitors to create a nice table
+      doc.autoTable({
+        startY: yPosition + 7,
+        head: [['Name', 'Occupation', 'Contact', 'Address']],
+        body: report.visitors.map(visitor => [
+          visitor.name,
+          visitor.occupation,
+          visitor.contact,
+          visitor.address
+        ])
+      });
+    }
+
+    // Comments
+    if (report.comments) {
+      yPosition = doc.autoTable.previous.finalY + 10;
+      doc.setFontSize(14);
+      doc.text('Comments', 14, yPosition);
+      doc.setFontSize(12);
+      doc.text(report.comments, 14, yPosition + 7);
+    }
+
+    // Save the PDF
+    doc.save(`Daily_Report_${new Date(report.createdAt.toDate()).toLocaleDateString()}.pdf`);
+  };
+
+
+  // New method to generate PDF for all reports
+  const generateAllReportsPDF = () => {
+    const doc = new jsPDF();
+
+    dailyReports.forEach((report, index) => {
+      // Add a new page for each report after the first one
+      if (index > 0) {
+        doc.addPage();
+      }
+
+      // Set document title
+      doc.setFontSize(18);
+      doc.text(`Daily Report - ${new Date(report.createdAt.toDate()).toLocaleDateString()}`, 14, 20);
+
+      // Site Information
+      doc.setFontSize(12);
+      doc.text(`Site Name: ${report.siteName}`, 14, 30);
+      doc.text(`Number of Staff: ${report.numberOfStaff}`, 14, 37);
+
+      // Contractor Information
+      doc.setFontSize(14);
+      doc.text('Contractor Information', 14, 50);
+      doc.setFontSize(12);
+      doc.text(`Name: ${report.contractorName}`, 14, 57);
+      doc.text(`Type of Work: ${report.typeOfWork}`, 14, 64);
+
+      // Site Tasks
+      let yPosition = 80;
+      doc.setFontSize(14);
+      doc.text('Site Tasks', 14, yPosition);
+      doc.setFontSize(12);
+      report.siteTasks.forEach((task, taskIndex) => {
+        yPosition += 7;
+        doc.text(`${taskIndex + 1}. ${task.taskName} - Workers: ${task.workers}`, 14, yPosition);
+      });
+
+      // Contractor Tasks
+      yPosition += 14;
+      doc.setFontSize(14);
+      doc.text('Contractor Tasks', 14, yPosition);
+      doc.setFontSize(12);
+      report.contractorTasks.forEach((task, taskIndex) => {
+        yPosition += 7;
+        doc.text(`${taskIndex + 1}. ${task.taskName}`, 14, yPosition);
+      });
+
+      // Tomorrow's Tasks
+      yPosition += 14;
+      doc.setFontSize(14);
+      doc.text("Tomorrow's Tasks", 14, yPosition);
+      doc.setFontSize(12);
+      report.tomorrowsTasks.forEach((task, taskIndex) => {
+        yPosition += 7;
+        doc.text(`${taskIndex + 1}. ${task.taskName}`, 14, yPosition);
+      });
+
+      // Visitors
+      if (report.visitors && report.visitors.length > 0) {
+        yPosition += 14;
+        doc.setFontSize(14);
+        doc.text('Visitors', 14, yPosition);
+
+        // Use autoTable for visitors to create a nice table
+        doc.autoTable({
+          startY: yPosition + 7,
+          head: [['Name', 'Occupation', 'Contact', 'Address']],
+          body: report.visitors.map(visitor => [
+            visitor.name,
+            visitor.occupation,
+            visitor.contact,
+            visitor.address
+          ])
+        });
+      }
+
+      // Comments
+      if (report.comments) {
+        yPosition = doc.autoTable.previous.finalY + 10;
+        doc.setFontSize(14);
+        doc.text('Comments', 14, yPosition);
+        doc.setFontSize(12);
+        doc.text(report.comments, 14, yPosition + 7);
+      }
+    });
+
+    // Save the PDF
+    doc.save(`All_Daily_Reports_${new Date().toLocaleDateString()}.pdf`);
+  };
+
+
+
+
   // Function to fetch daily reports for the current site
   const fetchDailyReports = async () => {
-    if (!site) {
-      alert("Please select a site first");
-      return;
-    }
 
     setIsLoading(true);
     try {
-      // Create a query to fetch reports for the current site, ordered by date
+      console.log("Fetching reports for site ID:", site.id);
+
       const reportsRef = collection(db, "daily reports");
       const q = query(
         reportsRef,
-        where("siteId", "==", site.id),
-        orderBy("reportDate", "desc")
+        where("siteId", "==", site.id)
       );
 
       const querySnapshot = await getDocs(q);
-      const reports = querySnapshot.docs.map(doc => ({
+      const reports = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
 
       setDailyReports(reports);
@@ -71,18 +243,19 @@ const DailyReportPage = () => {
 
       // Scroll to reports section
       setTimeout(() => {
-        const reportsSection = document.getElementById('daily-reports-section');
+        const reportsSection = document.getElementById("daily-reports-section");
         if (reportsSection) {
-          reportsSection.scrollIntoView({ behavior: 'smooth' });
+          reportsSection.scrollIntoView({ behavior: "smooth" });
         }
       }, 100);
     } catch (error) {
       console.error("Error fetching daily reports:", error);
-      alert("Failed to fetch daily reports");
+      alert("Failed to fetch daily reports.");
     } finally {
       setIsLoading(false);
     }
   };
+
 
   // Handle input change for controlled components
   const handleChange = (e) => {
@@ -110,7 +283,7 @@ const DailyReportPage = () => {
         visitors: formState.visitors,
         createdAt: serverTimestamp(),// Automatically add a timestamp
         userId: user?.uid || user?.id || 'unknown-user',
-        siteId: site?.uid || site?.id || 'unknown-site',
+        siteId: site?.id || 'unknown-site',
 
       };
 
@@ -154,12 +327,21 @@ const DailyReportPage = () => {
         {isReportsVisible && (
           <div
             id="daily-reports-section"
-            className="bg-white shadow-lg rounded-lg overflow-x-auto"
+            className=" shadow-lg rounded-lg overflow-x-auto m-4"
           >
             <h2 className="text-2xl font-bold p-4 border-b">
               Daily Reports for {site?.siteName || 'Selected Site'}
             </h2>
-
+            {dailyReports.length > 0 && (
+              <div className="flex space-x-2 justify-end m-3">
+                <button
+                  onClick={() => generateAllReportsPDF()}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                >
+                  Download All Reports
+                </button>
+              </div>
+            )}
             {dailyReports.length === 0 ? (
               <p className="p-4 text-center text-gray-500">
                 No daily reports found for this site.
@@ -169,12 +351,18 @@ const DailyReportPage = () => {
                 {dailyReports.map((report) => (
                   <div
                     key={report.id}
-                    className="border-b p-4 hover:bg-gray-50 transition-colors"
+                    className="border-b m-4 p-4"
                   >
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-xl font-semibold">
                         Daily Report - {new Date(report.createdAt.toDate()).toLocaleDateString()}
                       </h3>
+                      <button
+                        onClick={() => generateSingleReportPDF(report)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                      >
+                        Download Report
+                      </button>
                       <span className="text-sm text-gray-500">
                         Site: {report.siteName}
                       </span>
@@ -419,13 +607,6 @@ const DailyReportPage = () => {
         <button type='submit' class='bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600'>Submit Report</button>
 
       </form>
-
-
-
-
-
-
-
     </div>
   );
 };

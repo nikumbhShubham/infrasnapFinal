@@ -26,7 +26,7 @@ const sitesSlice = createSlice({
     },
     setCurrentSite: (state, action) => {
       const site = state.sites.find(site => site.id === action.payload);
-      state.currentSite = site || null; // Set current site by ID or null if not found
+      state.currentSite = site ; // Set current site by ID or null if not found
     },
     clearCurrentSite: (state) => {
       state.currentSite = null; // Clear the current site
