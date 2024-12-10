@@ -13,7 +13,7 @@ import Settings from "@/routes/dashboard/Settings";
 // import SignUp from "./Sections/SignUp";
 // import SignIn from "./Sections/SignIn";
 // import SiteDailyReport from "./dump/SiteDailyReport";
-import SiteDailyReport from "./routes/dashboard/SiteDailyReport";
+// import SiteDailyReport from "./routes/dashboard/SiteDailyReport";
 import RawMaterial from "./dump/RawMaterial";
 // import HeroSection from "./Sections/Hero2";
 import HeroSection from "./Sections/HeroSection";
@@ -60,12 +60,12 @@ function App() {
             path: "/dashboard",
             element: <Layout />,
             children: [
-<<<<<<< HEAD
+
                 { path: "page", index: true, element: <Sites /> },
                 { path: "analytics", element: <DailyReportPage /> },
                 { path: "reports", element: <RawMaterialsPage /> },
                 { path: "upload", element: < UploadImagePage /> },
-=======
+
                 { path: "page", index: true, element: <DashboardPage /> },
                 { path: "Sites", element: <Sites /> },
                 { path: "analytics", element: <DailyReportPage/>  },

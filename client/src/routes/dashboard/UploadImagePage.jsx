@@ -1,178 +1,201 @@
-import React, { useState } from 'react';
+import { useState } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirestore, doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { db, storage } from "../../config/firebase";
+
 
 const UploadImagePage = () => {
-  const [building, setBuilding] = useState('');
-  const [floor, setFloor] = useState('');
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const user = useSelector((state) => state.user.user);
+  const site = useSelector((state) => state.sites.currentSite);
+  console.log(site.id)
+  console.log(user.uid)
+
   const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [predictions, setPredictions] = useState(null);
-  const [uploadedImages, setUploadedImages] = useState({});
+  const [predictionStage, setPredictionStage] = useState()
+  const [folders, setFolders] = useState({
+    Foundation: 0,
+    SubStructure: 0,
+    Plinth: 0,
+    SuperStructure: 0,
+    Finishing: 0,
+  });
+  const [activeFolder, setActiveFolder] = useState(null);
 
-  const [showBuildingPopup, setShowBuildingPopup] = useState(true);
-  const [selectedStage, setSelectedStage] = useState('');
-  const [selectedActivity, setSelectedActivity] = useState('');
-  const [selectedComponents, setSelectedComponents] = useState('');
-
-  // Handle Image Upload
   const handleUploadImage = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
+    const file = event.target.files?.[0];
+    if (!file) {
+      alert("No file selected.");
+      return;
+    }
+    const imageUrl = URL.createObjectURL(file);
+    setImage(imageUrl);
+    setImageFile(file);
+  };
+
+  const handlePredict = async () => {
+    if (!imageFile) {
+      alert("Please upload an image.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    try {
+      const response = await axios.post("http://127.0.0.1:5000/predict", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const { stage, progress } = response.data;
+      const cleanedStage = stage.replace(/\\/g, "").trim();
+
+      setPredictions(response.data);
+      setFolders((prev) => ({
+        ...prev,
+        [cleanedStage]: progress || 0,
+      }));
+      setPredictionStage(predictions.stage)
+    } catch (error) {
+      console.error("Error fetching predictions:", error);
+      alert("Error fetching predictions. Please try again.");
     }
   };
 
-  // Simulate Predictions
-  const handlePredict = () => {
-    const simulatedPredictions = {
-      stage: 'Stage 1',
-      activity: 'Excavation',
-      components: 'Cement, Steel, Sand',
-    };
-    setPredictions(simulatedPredictions);
-    setSelectedStage(simulatedPredictions.stage);
-    setSelectedActivity(simulatedPredictions.activity);
-    setSelectedComponents(simulatedPredictions.components);
-  };
+  console.log(predictionStage)
+  const handleAddToFolder = async () => {
+    if (!predictions || !imageFile) return;
 
-  // Handle Add to Site
-  const handleAddToSite = () => {
-    if (selectedStage && selectedActivity && selectedComponents && image) {
-      const newUploadedImages = { ...uploadedImages };
-      if (!newUploadedImages[selectedStage]) {
-        newUploadedImages[selectedStage] = [];
-      }
-      newUploadedImages[selectedStage].push({
-        image,
-        activity: selectedActivity,
-        components: selectedComponents,
+    try {
+      // Upload to Firebase Storage
+      
+      const folderPath = `${user.uid}/${site.id}/${predictions.stage}`;
+
+      const storageRef = ref(storage, `${folderPath}}`);
+      const snapshot = await uploadBytes(storageRef, imageFile);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      // Update Firestore
+      const docRef = doc(db, "sites", site.id);
+      await updateDoc(docRef, {
+        [`${predictions.stage}.images`]: arrayUnion(downloadURL),
       });
-      setUploadedImages(newUploadedImages);
+
+      alert("Image added to folder and Firestore successfully!");
       setImage(null);
+      setImageFile(null);
       setPredictions(null);
-      setSelectedStage('');
-      setSelectedActivity('');
-      setSelectedComponents('');
+    } catch (error) {
+      console.error("Error adding image to folder:", error);
+      alert("Error adding image to folder. Please try again.");
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-indigo-100 p-10">
-      {/* Building and Floor Selection Pop-up */}
-      {showBuildingPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-10 rounded-2xl shadow-2xl w-96">
-            <h2 className="text-3xl font-semibold text-indigo-600 mb-6">Select Building and Floor</h2>
-            <div className="mb-6">
-              <label className="block text-gray-700 text-lg font-medium mb-2">Building</label>
-              <select
-                value={building}
-                onChange={(e) => setBuilding(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Select Building</option>
-                <option value="Building 1">Building 1</option>
-                <option value="Building 2">Building 2</option>
-              </select>
-            </div>
-            <div className="mb-6">
-              <label className="block text-gray-700 text-lg font-medium mb-2">Floor</label>
-              <select
-                value={floor}
-                onChange={(e) => setFloor(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Select Floor</option>
-                <option value="Floor 1">Floor 1</option>
-                <option value="Floor 2">Floor 2</option>
-              </select>
-            </div>
-            <button
-              onClick={() => setShowBuildingPopup(false)}
-              className="w-full py-3 bg-indigo-600 text-white text-lg rounded-lg hover:bg-indigo-700 transition ease-in-out duration-300"
+      {!activeFolder ? (
+        <div className="flex flex-col items-center mt-10 space-y-10">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-4xl w-full mb-8">
+            <h2 className="text-3xl font-semibold text-indigo-600 mb-6 text-center">UPLOAD IMAGE</h2>
+            <label
+              htmlFor="file-upload"
+              className="w-full h-72 border-4 border-dashed border-indigo-500 rounded-lg flex justify-center items-center cursor-pointer hover:border-indigo-700"
+              aria-label="Upload an image"
             >
-              Continue
-            </button>
+              <span className="text-indigo-600 text-lg">Click to Upload Image</span>
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              id="file-upload"
+              onChange={handleUploadImage}
+              className="hidden"
+            />
+            {image && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full mt-6">
+                <img src={image} alt="Uploaded" className="w-full h-72 object-cover rounded-lg shadow-md" />
+              </motion.div>
+            )}
           </div>
-        </div>
-      )}
 
-      {/* Main Content */}
-      <div className="flex flex-col items-center mt-10">
-        {/* Upload Image Section */}
-        <div className="bg-white p-8 rounded-lg shadow-xl max-w-4xl w-full mb-8">
-          <h2 className="text-3xl font-semibold text-indigo-600 mb-6">Upload Image</h2>
-          <label
-            htmlFor="file-upload"
-            className="w-full h-72 border-4 border-dashed border-indigo-500 rounded-lg flex justify-center items-center cursor-pointer hover:border-indigo-700 transition ease-in-out duration-300"
+          <motion.button
+            onClick={handlePredict}
+            className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-6 hover:bg-indigo-700"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
-            <span className="text-indigo-600 text-lg">Click to Upload Image</span>
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            id="file-upload"
-            onChange={handleUploadImage}
-            className="hidden"
-          />
-          {image && (
-            <div className="w-full mt-6">
-              <img
-                src={image}
-                alt="Uploaded"
-                className="w-full h-72 object-cover rounded-lg shadow-md"
-              />
+            Predict
+          </motion.button>
+           
+          {predictions && (
+            <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-4xl w-full mb-8">
+              <h2 className="text-3xl font-semibold text-indigo-600 mb-4 text-center">PREDICTION RESULTS</h2>
+              <p className="text-lg text-gray-700 mb-2">
+                <strong>Predicted Stage:</strong> {predictions?.stage?.replace(/\\/g, "") || "No stage detected"}
+              </p>
+              <p className="text-lg text-gray-700 mb-2">
+                <strong>Predicted Activity:</strong> {predictions?.activity || "N/A"}
+              </p>
+              <p className="text-lg text-gray-700">
+                <strong>Predicted Components:</strong> {predictions?.components || "N/A"}
+              </p>
             </div>
           )}
-        </div>
 
-        {/* Predict Button */}
-        <button
-          onClick={handlePredict}
-          className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-6 hover:bg-indigo-700 transition ease-in-out duration-300"
-        >
-          Predict
-        </button>
+          {predictions && (
+            <motion.button
+              onClick={handleAddToFolder}
+              className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-8 hover:bg-indigo-700"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              Add to Folder
+            </motion.button>
+          )}
 
-        {/* Prediction Results */}
-        {predictions && (
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-4xl w-full mb-8">
-            <h2 className="text-3xl font-semibold text-indigo-600 mb-4">Prediction Results</h2>
-            <p className="text-lg text-gray-700 mb-2"><strong>Predicted Stage:</strong> {predictions.stage}</p>
-            <p className="text-lg text-gray-700 mb-2"><strong>Predicted Activity:</strong> {predictions.activity}</p>
-            <p className="text-lg text-gray-700"><strong>Predicted Components:</strong> {predictions.components}</p>
-          </div>
-        )}
-
-        {/* Add to Site Button */}
-        {predictions && (
-          <button
-            onClick={handleAddToSite}
-            className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-8 hover:bg-indigo-700 transition ease-in-out duration-300"
-          >
-            Add to Site
-          </button>
-        )}
-
-        {/* Image History Section (without heading) */}
-        <div className="mt-10 w-full">
-          {Object.keys(uploadedImages).map((stage) => (
-            <div key={stage} className="mb-6">
-              <h3 className="text-2xl font-semibold text-gray-700 mb-4">Stage: {stage}</h3>
-              <div className="flex flex-wrap justify-start gap-6">
-                {uploadedImages[stage].map((item, index) => (
-                  <div key={index} className="w-40 h-40">
-                    <img
-                      src={item.image}
-                      
-                      className="w-full h-full object-cover rounded-lg shadow-lg"
-                    />
+          <div className="flex justify-around w-full mt-10 space-x-6">
+            {Object.keys(folders).map((folder) => (
+              <div key={folder} className="w-48 h-48 flex flex-col items-center justify-center">
+                <div className="w-full bg-gray-300 rounded-full h-2 mb-2 relative">
+                  <div
+                    className="bg-blue-600 h-full rounded-full"
+                    style={{ width: `${folders[folder]}%` }}
+                  />
+                  <div className="absolute top-0 text-xs font-semibold text-blue-600" style={{ left: "100%", transform: "translateX(-50%)" }}>
+                    {folders[folder]}%
                   </div>
-                ))}
+                </div>
+                <motion.div
+                  className="w-48 h-48 bg-white border-2 border-indigo-500 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-100"
+                  onClick={() => setActiveFolder(folder)}
+                >
+                  <h3 className="text-lg font-semibold text-indigo-600">{folder}</h3>
+                </motion.div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col items-center mt-10">
+          <h2 className="text-3xl font-semibold text-indigo-600 mb-6">{activeFolder} Images</h2>
+          <motion.button
+            onClick={() => setActiveFolder(null)}
+            className="mb-6 py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            Back to Folders
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 };
