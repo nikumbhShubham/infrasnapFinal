@@ -1,46 +1,51 @@
 import { useState } from "react";
+
+import { motion } from "framer-motion"; // Animation library
+// import { useNavigate } from "react-router-dom"; // For routing
+
 import axios from "axios";
-import { motion } from "framer-motion";
+
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getFirestore, doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { db, storage } from "../../config/firebase";
-
+import { updateSite } from "../../redux/Site/siteSlice";
 
 const UploadImagePage = () => {
-
-  const navigate = useNavigate();
-  const dispatch = useDispatch()
-  const user = useSelector((state) => state.user.user);
-  const site = useSelector((state) => state.sites.currentSite);
-  console.log(site.id)
-  console.log(user.uid)
-
   const [image, setImage] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null); // To send to backend
   const [predictions, setPredictions] = useState(null);
-  const [predictionStage, setPredictionStage] = useState()
+
   const [folders, setFolders] = useState({
-    Foundation: 0,
+    Foundation: 0, // Progress in %
     SubStructure: 0,
     Plinth: 0,
     SuperStructure: 0,
     Finishing: 0,
   });
-  const [activeFolder, setActiveFolder] = useState(null);
+  const [activeFolder, setActiveFolder] = useState(null); // For viewing images in a specific folder
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const user = useSelector((state) => state.user.user);
+  const site = useSelector((state) => state.sites.currentSite);
+  const sites = useSelector((state) => state.sites.sites);
+
+  console.log(site.id)
+  console.log(user.uid)
+  
+  // Handle Image Upload
   const handleUploadImage = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      alert("No file selected.");
-      return;
+    const file = event.target.files[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImage(imageUrl);
+      setImageFile(file); // Store file for backend
     }
-    const imageUrl = URL.createObjectURL(file);
-    setImage(imageUrl);
-    setImageFile(file);
   };
 
+  // Fetch Predictions from Backend
   const handlePredict = async () => {
     if (!imageFile) {
       alert("Please upload an image.");
@@ -55,29 +60,30 @@ const UploadImagePage = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const { stage, progress } = response.data;
-      const cleanedStage = stage.replace(/\\/g, "").trim();
+      const { stage, overall_progress, sub_stage_progress, sub_stage_name } = response.data;
 
       setPredictions(response.data);
-      setFolders((prev) => ({
-        ...prev,
-        [cleanedStage]: progress || 0,
+
+      // Update the progress for the respective stage
+      setFolders((prevFolders) => ({
+        ...prevFolders,
+        [stage]: overall_progress, // Update the progress for the predicted stage
       }));
-      setPredictionStage(predictions.stage)
     } catch (error) {
       console.error("Error fetching predictions:", error);
       alert("Error fetching predictions. Please try again.");
     }
   };
 
-  console.log(predictionStage)
+  console.log(image)
+  // Add Image to Respective Folder
   const handleAddToFolder = async () => {
     if (!predictions || !imageFile) return;
 
     try {
       // Upload to Firebase Storage
-      
-      const folderPath = `${user.uid}/${site.id}/${predictions.stage}`;
+
+      const folderPath = `${user.uid}/${site.id}/${predictions.stage}/${predictions.sub_stage_name}/${image}`;
 
       const storageRef = ref(storage, `${folderPath}}`);
       const snapshot = await uploadBytes(storageRef, imageFile);
@@ -86,9 +92,10 @@ const UploadImagePage = () => {
       // Update Firestore
       const docRef = doc(db, "sites", site.id);
       await updateDoc(docRef, {
-        [`${predictions.stage}.images`]: arrayUnion(downloadURL),
+        [`${predictions.stage}.${predictions.sub_stage_name}.images`]: arrayUnion(downloadURL),
       });
-
+      dispatch(updateSite(siteData))
+      console.log(site)
       alert("Image added to folder and Firestore successfully!");
       setImage(null);
       setImageFile(null);
@@ -99,16 +106,26 @@ const UploadImagePage = () => {
     }
   };
 
+  console.log(site.Foundation)
+
+
+  // Navigate to the specific stage dashboard
+  const handleFolderClick = (folder) => {
+    setActiveFolder(folder); // Set the active folder to track it
+    navigate(`/dashboard/${folder.toLowerCase()}`); // Navigate to the respective stage dashboard
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-indigo-100 p-10">
+      {/* Main Content */}
       {!activeFolder ? (
         <div className="flex flex-col items-center mt-10 space-y-10">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-4xl w-full mb-8">
+          {/* Upload Image Section */}
+          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-4xl w-full mb-8 transform transition duration-500 hover:scale-105">
             <h2 className="text-3xl font-semibold text-indigo-600 mb-6 text-center">UPLOAD IMAGE</h2>
             <label
               htmlFor="file-upload"
-              className="w-full h-72 border-4 border-dashed border-indigo-500 rounded-lg flex justify-center items-center cursor-pointer hover:border-indigo-700"
-              aria-label="Upload an image"
+              className="w-full h-72 border-4 border-dashed border-indigo-500 rounded-lg flex justify-center items-center cursor-pointer hover:border-indigo-700 transition ease-in-out duration-300"
             >
               <span className="text-indigo-600 text-lg">Click to Upload Image</span>
             </label>
@@ -120,40 +137,50 @@ const UploadImagePage = () => {
               className="hidden"
             />
             {image && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full mt-6">
-                <img src={image} alt="Uploaded" className="w-full h-72 object-cover rounded-lg shadow-md" />
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full mt-6"
+              >
+                <img
+                  src={image}
+                  alt="Uploaded"
+                  className="w-full h-72 object-cover rounded-lg shadow-md"
+                />
               </motion.div>
             )}
           </div>
 
+          {/* Predict Button */}
           <motion.button
             onClick={handlePredict}
-            className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-6 hover:bg-indigo-700"
+            className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-6 hover:bg-indigo-700 transition ease-in-out duration-300 transform hover:scale-110 hover:shadow-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
             Predict
           </motion.button>
-           
+
+          {/* Prediction Results */}
           {predictions && (
-            <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-4xl w-full mb-8">
-              <h2 className="text-3xl font-semibold text-indigo-600 mb-4 text-center">PREDICTION RESULTS</h2>
-              <p className="text-lg text-gray-700 mb-2">
-                <strong>Predicted Stage:</strong> {predictions?.stage?.replace(/\\/g, "") || "No stage detected"}
-              </p>
-              <p className="text-lg text-gray-700 mb-2">
-                <strong>Predicted Activity:</strong> {predictions?.activity || "N/A"}
-              </p>
-              <p className="text-lg text-gray-700">
-                <strong>Predicted Components:</strong> {predictions?.components || "N/A"}
-              </p>
+            <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-4xl w-full mb-8 transform transition duration-500 hover:scale-105">
+              <h2 className="text-3xl font-semibold text-indigo-600 mb-4 text-center">
+                PREDICTION RESULTS
+              </h2>
+              <p className="text-lg text-gray-700 mb-2"><strong>Predicted Stage:</strong> {predictions.stage}</p>
+              <p className="text-lg text-gray-700 mb-2"><strong>Predicted Activity:</strong> {predictions.activity}</p>
+              <p className="text-lg text-gray-700"><strong>Predicted Components:</strong> {predictions.components}</p>
+              <p className="text-lg text-gray-700 mb-2"><strong>Predicted Sub-stage:</strong> {predictions.sub_stage_name}</p>
+              <p className="text-lg text-gray-700 mb-2"><strong>Overall Progress:</strong> {predictions.overall_progress}</p>
             </div>
           )}
 
+
+          {/* Add to Folder Button */}
           {predictions && (
             <motion.button
               onClick={handleAddToFolder}
-              className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-8 hover:bg-indigo-700"
+              className="w-64 py-3 bg-indigo-600 text-white text-lg rounded-lg mb-8 hover:bg-indigo-700 transition ease-in-out duration-300 transform hover:scale-110 hover:shadow-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -161,21 +188,31 @@ const UploadImagePage = () => {
             </motion.button>
           )}
 
+          {/* Folders Section */}
           <div className="flex justify-around w-full mt-10 space-x-6">
             {Object.keys(folders).map((folder) => (
               <div key={folder} className="w-48 h-48 flex flex-col items-center justify-center">
+                {/* Progress bar container */}
                 <div className="w-full bg-gray-300 rounded-full h-2 mb-2 relative">
+                  {/* Progress bar filling */}
                   <div
                     className="bg-blue-600 h-full rounded-full"
-                    style={{ width: `${folders[folder]}%` }}
+                    style={{ width: `${folders[folder]}%` }} // This sets the progress width dynamically
                   />
-                  <div className="absolute top-0 text-xs font-semibold text-blue-600" style={{ left: "100%", transform: "translateX(-50%)" }}>
+                  {/* Progress percentage */}
+                  <div
+                    className="absolute right-0 top-0 text-xs font-semibold text-blue-600"
+                    style={{ left: "100%", transform: "translateX(-100%)" }}
+                  >
                     {folders[folder]}%
                   </div>
                 </div>
+
                 <motion.div
-                  className="w-48 h-48 bg-white border-2 border-indigo-500 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-100"
-                  onClick={() => setActiveFolder(folder)}
+                  className="w-48 h-48 bg-white border-2 border-indigo-500 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-100 transition ease-in-out duration-300 transform hover:scale-110 hover:shadow-2xl"
+                  onClick={() => handleFolderClick(folder)} // Link to the respective stage dashboard
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <h3 className="text-lg font-semibold text-indigo-600">{folder}</h3>
                 </motion.div>
@@ -188,7 +225,7 @@ const UploadImagePage = () => {
           <h2 className="text-3xl font-semibold text-indigo-600 mb-6">{activeFolder} Images</h2>
           <motion.button
             onClick={() => setActiveFolder(null)}
-            className="mb-6 py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            className="mb-6 py-2 px-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition ease-in-out duration-300"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -201,3 +238,4 @@ const UploadImagePage = () => {
 };
 
 export default UploadImagePage;
+

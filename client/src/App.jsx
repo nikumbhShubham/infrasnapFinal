@@ -24,6 +24,7 @@ import DailyReportPage from "./routes/dashboard/SiteDailyReport";
 import RawMaterialsPage from "./routes/dashboard/RawMaterialsPage";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import UploadImagePage from "./routes/dashboard/UploadImagePage";
+import FoundationDashboard from "./routes/dashboard/stages/FoundationDashboard";
 
 function App() {
     const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +78,7 @@ function App() {
                 { path: "products", element: <h1 className="title">Products</h1> },
                 { path: "new-product", element: <h1 className="title">New Product</h1> },
                 { path: "inventory", element: <h1 className="title">Inventory</h1> },
+                { path: "foundation", element:<FoundationDashboard/> },
                 { path: "settings", element: <Settings /> },
             ],
         },

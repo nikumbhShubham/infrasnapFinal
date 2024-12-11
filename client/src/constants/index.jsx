@@ -32,6 +32,11 @@ export const navbarLinks = [
                 icon: NotepadText,
                 path: "/dashboard/upload",
             },
+            {
+                label: "foundation",
+                icon: NotepadText,
+                path: "/dashboard/foundation",
+            },
         ],
     },
     {
