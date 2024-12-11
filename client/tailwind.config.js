@@ -9,6 +9,8 @@ export default {
                 montserrat: ['Montserrat', 'sans-serif'],
                 generalsans: ['General Sans', 'sans-serif'],
                 eloquia: ['Eloquia', 'sans-serif'],
+                poppins: ['Poppins', 'sans-serif'],
+
               },
         },
     },

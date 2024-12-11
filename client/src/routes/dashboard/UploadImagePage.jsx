@@ -1,22 +1,16 @@
 import { useState } from "react";
-
 import { motion } from "framer-motion"; // Animation library
-// import { useNavigate } from "react-router-dom"; // For routing
-
+import { useNavigate } from "react-router-dom"; // For routing
 import axios from "axios";
-
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getFirestore, doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { db, storage } from "../../config/firebase";
+import { storage } from "../../config/firebase";
 import { updateSite } from "../../redux/Site/siteSlice";
 
 const UploadImagePage = () => {
   const [image, setImage] = useState(null);
   const [imageFile, setImageFile] = useState(null); // To send to backend
   const [predictions, setPredictions] = useState(null);
-
   const [folders, setFolders] = useState({
     Foundation: 0, // Progress in %
     SubStructure: 0,
@@ -24,17 +18,14 @@ const UploadImagePage = () => {
     SuperStructure: 0,
     Finishing: 0,
   });
-  const [activeFolder, setActiveFolder] = useState(null); // For viewing images in a specific folder
+  const [subStageProgress, setSubStageProgress] = useState({}); // For sub-stage progress percentages
+  const [activeFolder, setActiveFolder] = useState(null);
 
   const navigate = useNavigate();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
   const site = useSelector((state) => state.sites.currentSite);
-  const sites = useSelector((state) => state.sites.sites);
 
-  console.log(site.id)
-  console.log(user.uid)
-  
   // Handle Image Upload
   const handleUploadImage = (event) => {
     const file = event.target.files[0];
@@ -60,14 +51,20 @@ const UploadImagePage = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const { stage, overall_progress, sub_stage_progress, sub_stage_name } = response.data;
+      const { stage, overall_progress, sub_stage_progress } = response.data;
 
       setPredictions(response.data);
 
       // Update the progress for the respective stage
       setFolders((prevFolders) => ({
         ...prevFolders,
-        [stage]: overall_progress, // Update the progress for the predicted stage
+        [stage]: Math.max(prevFolders[stage] || 0, overall_progress), // Prevent regression
+      }));
+
+      // Update sub-stage progress
+      setSubStageProgress((prev) => ({
+        ...prev,
+        [stage]: sub_stage_progress,
       }));
     } catch (error) {
       console.error("Error fetching predictions:", error);
@@ -75,28 +72,35 @@ const UploadImagePage = () => {
     }
   };
 
-  console.log(image)
   // Add Image to Respective Folder
   const handleAddToFolder = async () => {
     if (!predictions || !imageFile) return;
 
     try {
       // Upload to Firebase Storage
-
-      const folderPath = `${user.uid}/${site.id}/${predictions.stage}/${predictions.sub_stage_name}/${image}`;
-
-      const storageRef = ref(storage, `${folderPath}}`);
+      const folderPath = `${user.uid}/${site.id}/${predictions.stage}/${predictions.sub_stage_name}`;
+      const storageRef = ref(storage, `${folderPath}/${imageFile.name}`);
       const snapshot = await uploadBytes(storageRef, imageFile);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       // Update Firestore
-      const docRef = doc(db, "sites", site.id);
-      await updateDoc(docRef, {
-        [`${predictions.stage}.${predictions.sub_stage_name}.images`]: arrayUnion(downloadURL),
-      });
-      dispatch(updateSite(siteData))
-      console.log(site)
+      const siteData = {
+        ...site,
+        [predictions.stage]: {
+          ...(site[predictions.stage] || {}),
+          [predictions.sub_stage_name]: {
+            images: [
+              ...((site[predictions.stage]?.[predictions.sub_stage_name]?.images) || []),
+              downloadURL,
+            ],
+          },
+        },
+      };
+
+      dispatch(updateSite(siteData));
       alert("Image added to folder and Firestore successfully!");
+
+      // Reset states
       setImage(null);
       setImageFile(null);
       setPredictions(null);
@@ -106,9 +110,6 @@ const UploadImagePage = () => {
     }
   };
 
-  console.log(site.Foundation)
-
-
   // Navigate to the specific stage dashboard
   const handleFolderClick = (folder) => {
     setActiveFolder(folder); // Set the active folder to track it
@@ -117,7 +118,6 @@ const UploadImagePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-indigo-100 p-10">
-      {/* Main Content */}
       {!activeFolder ? (
         <div className="flex flex-col items-center mt-10 space-y-10">
           {/* Upload Image Section */}
@@ -172,9 +172,14 @@ const UploadImagePage = () => {
               <p className="text-lg text-gray-700"><strong>Predicted Components:</strong> {predictions.components}</p>
               <p className="text-lg text-gray-700 mb-2"><strong>Predicted Sub-stage:</strong> {predictions.sub_stage_name}</p>
               <p className="text-lg text-gray-700 mb-2"><strong>Overall Progress:</strong> {predictions.overall_progress}</p>
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold text-gray-700">Sub-stage Progress:</h3>
+                {Object.entries(subStageProgress[predictions.stage] || {}).map(([subStage, progress]) => (
+                  <p key={subStage} className="text-gray-600">{subStage}: {progress}%</p>
+                ))}
+              </div>
             </div>
           )}
-
 
           {/* Add to Folder Button */}
           {predictions && (
@@ -238,4 +243,3 @@ const UploadImagePage = () => {
 };
 
 export default UploadImagePage;
-

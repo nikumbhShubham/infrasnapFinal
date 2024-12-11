@@ -36,49 +36,65 @@ export const navbarLinks = [
                 label: "foundation",
                 icon: NotepadText,
                 path: "/dashboard/foundation",
+            },{
+                label: "substructure",
+                icon: NotepadText,
+                path: "/dashboard/substructure",
+            },{
+                label: "superStructure",
+                icon: NotepadText,
+                path: "/dashboard/superstructure",
+            },{
+                label: "plinth",
+                icon: NotepadText,
+                path: "/dashboard/plinth",
+            },{
+                label: "finishing",
+                icon: NotepadText,
+                path: "/dashboard/finishing",
             },
         ],
     },
-    {
-        title: "Customers",
-        links: [
-            {
-                label: "Customers",
-                icon: Users,
-                path: "/customers",
-            },
-            {
-                label: "New customer",
-                icon: UserPlus,
-                path: "/new-customer",
-            },
-            {
-                label: "Verified customers",
-                icon: UserCheck,
-                path: "/verified-customers",
-            },
-        ],
-    },
-    {
-        title: "Products",
-        links: [
-            {
-                label: "Products",
-                icon: Package,
-                path: "/products",
-            },
-            {
-                label: "New product",
-                icon: PackagePlus,
-                path: "/new-product",
-            },
-            {
-                label: "Inventory",
-                icon: ShoppingBag,
-                path: "/inventory",
-            },
-        ],
-    },
+    // {
+    //     title: "Customers",
+    //     links: [
+    //         {
+    //             label: "Customers",
+    //             icon: Users,
+    //             path: "/customers",
+    //         },
+    //         {
+    //             label: "New customer",
+    //             icon: UserPlus,
+    //             path: "/new-customer",
+    //         },
+    //         {
+    //             label: "Verified customers",
+    //             icon: UserCheck,
+    //             path: "/verified-customers",
+    //         },
+    //     ],
+    // },
+    // {
+    //     title: "Products",
+    //     links: [
+    //         {
+    //             label: "Products",
+    //             icon: Package,
+    //             path: "/products",
+    //         },
+    //         {
+    //             label: "New product",
+    //             icon: PackagePlus,
+    //             path: "/new-product",
+    //         },
+    //         {
+    //             label: "Inventory",
+    //             icon: ShoppingBag,
+    //             path: "/inventory",
+    //         },
+    //     ],
+    // },
     {
         title: "Settings",
         links: [

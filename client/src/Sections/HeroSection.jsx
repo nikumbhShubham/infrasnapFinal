@@ -1,20 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, Menu, UserRound, ChevronsRight, CirclePower, Globe2 } from 'lucide-react';
+import { ChevronDown, Menu, UserRound, ChevronsRight, CirclePower } from 'lucide-react';
 import AboutSection from './AboutSection';
 import FeaturesSection from './FeaturesSection';
 import PricingSection from './Pricing';
 import Footer from './FooterSection';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../contexts/LanguageContext';
+
 
 const HeroSection = () => {
-    const { t } = useTranslation();
-    const { currentLanguage, changeLanguage, languages } = useLanguage();
-
     return (
-
+        
         <div className="min-h-screen bg-gradient-to-br from-[#caddf2] via-[#edf1f5] to-[#f7f8f9] px-4 pt-6 font-eloquia">
             <motion.div
                 className="absolute top-1 -left-20 w-96 h-96 bg-gradient-to-tr from-blue-400 to-blue-700 rounded-full opacity-10"
@@ -35,56 +31,33 @@ const HeroSection = () => {
             >
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 flex items-center justify-center">
-                        <img src="assets/Collab.png" alt="infrasnap" className='w-[150px] h-full object-cover' />
+                        <img src="assets/Collab.png" alt="infrasnap" className='w-[150px] h-full object-cover relative left-4' />
                     </div>
-                    <span className="text-lg font-semibold text-[#232650]">InfraSnap</span>
+                    <span className="text-xl font-montserrat font-bold text-[#232650] relative left-4">InfraSnap</span>
                 </div>
                 <div className="hidden md:flex items-center gap-8">
-                    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-1 text-[#4b5563] cursor-pointer hover:text-[#1e40af] transition-colors">
-                        {t('navbar.features')}
+                    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-1 text-[#4b5563] cursor-pointer hover:text-[#1e40af] transition-colors font-medium font-poppins">
+                        Features
                         <ChevronDown className="w-4 h-4 opacity-70" />
                     </motion.div>
-                    <motion.div whileHover={{ scale: 1.1 }} className="text-[rgb(75,85,99)] cursor-pointer hover:text-[#1e40af] transition-colors">
-                        {t('navbar.pricing')}
+                    <motion.div whileHover={{ scale: 1.1 }} className="text-[rgb(75,85,99)] cursor-pointer hover:text-[#1e40af] transition-colors font-medium font-poppins">
+                        Pricing
                     </motion.div>
-                    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-1 text-[#4b5563] cursor-pointer hover:text-[#1e40af] transition-colors">
-                        {t('navbar.resources')}
+                    <motion.div whileHover={{ scale: 1.1 }} className="flex items-center gap-1 text-[#4b5563] cursor-pointer hover:text-[#1e40af] transition-colors font-medium font-poppins">
+                        Resources
                         <ChevronDown className="w-4 h-4 opacity-70" />
                     </motion.div>
-                    <motion.div whileHover={{ scale: 1.1 }} className="text-[#4b5563] cursor-pointer hover:text-[#1e40af] transition-colors">
-                        {t('navbar.integrations')}
+                    <motion.div whileHover={{ scale: 1.1 }} className="text-[#4b5563] cursor-pointer hover:text-[#1e40af] transition-colors font-poppins font-medium">
+                        Integrations
                     </motion.div>
                 </div>
-                {/* Language Selector */}
-                <div className="relative group">
-                    <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        className="flex items-center gap-2 bg-white px-3 py-2 rounded-full text-sm font-medium"
-                    >
-                        <Globe2 className="w-4 h-4" />
-                        <span>{languages.find(lang => lang.code === currentLanguage)?.name || 'English'}</span>
-                    </motion.button>
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                        {languages.map((lang) => (
-                            <button
-                                key={lang.code}
-                                onClick={() => changeLanguage(lang.code)}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
-                            >
-                                {lang.name}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-
                 <div className="flex items-center gap-4">
                     <motion.button
                         whileHover={{ scale: 1.1 }}
-                        className="flex items-center gap-2 bg-gradient-to-r from-[#101a32] to-[#0e449b] hover:from-[#0f52bd] hover:to-[#101a32] text-white px-5 py-2 rounded-full text-sm font-medium transition-all"
+                        className="flex items-center gap-2 bg-gradient-to-r from-[#101a32] to-[#0e449b] hover:from-[#0f52bd] hover:to-[#101a32] text-white px-5 py-2 rounded-full text-sm font-montserrat font-bold transition-all"
                     >
                         <UserRound className="w-6 h-6 rounded-full p-1 bg-gradient-to-t from-[#cbcccd] via-black to-[#030e29]" />
-                        <Link to='/signup'>{t('navbar.signup')}</Link>
+                        <Link to='/signup'>Sign up</Link>
                     </motion.button>
                     <Menu className="md:hidden w-6 h-6 text-[#4b5563] cursor-pointer" />
                 </div>
@@ -104,20 +77,21 @@ const HeroSection = () => {
                     className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 shadow-sm"
                 >
                     <CirclePower className='w-4 h-4 rounded-full bg-gradient-to-t from-[#101a32] to-[#1a4c9d] text-white' />
-                    <span className="text-sm text-[#4b5563]">{t('hero.startJourney')}</span>
+                    <span className="text-sm text-[#4b5563] font-montserrat font-bold">Start your journey</span>
+
                 </motion.div>
 
-                <h1 className="text-5xl md:text-6xl font-bold mb-2">
+                <h1 className="text-6xl md:text-7xl font-bold mb-2">
                     <span className="text-[#121d36]">
-                        <span className='bg-gradient-to-t from-[#1a4c9d] to-[#101a32] bg-clip-text text-transparent mr-2'>{t('hero.headline.part1')}</span>
-                        {t('hero.headline.part2')}</span><br />
+                        <span className='bg-gradient-to-t from-[#1a4c9d] to-[#101a32] bg-clip-text text-transparent mr-2'>Snapshot</span>
+                        Your</span><br />
                     <span className="text-[#121d36]">
-                        {t('hero.headline.part3')}
+                        Way to Smarter Infrastructure
                     </span>
                 </h1>
 
-                <p className="text-[#4b5563] text-md mb-3 max-w-5xl mx-auto">
-                    {t('hero.description')}
+                <p className="text-[#4b5563] text-md mb-3 max-w-5xl mx-auto font-poppins">
+                    The all-in-one platform that empowers businesses to track, manage, and grow customer connections seamlessly.
                 </p>
 
                 {/* Flow Diagram */}
@@ -137,16 +111,16 @@ const HeroSection = () => {
                 <div className="flex justify-center gap-9">
                     <motion.button
                         whileHover={{ scale: 1.1 }}
-                        className="flex items-center gap-2 bg-gradient-to-r from-[#101a32] to-[#0f52bd] hover:from-[#0e449b] hover:to-[#101a32] text-white px-5 py-2 rounded-full text-sm font-medium transition-all"
+                        className="flex items-center gap-2 bg-gradient-to-r from-[#101a32] to-[#0f52bd] hover:from-[#0e449b] hover:to-[#101a32] text-white px-5 py-2 rounded-full text-lg font-montserrat font-bold transition-all"
                     >
-                        <span>{t('hero.cta.getStarted')}</span>
+                        <span>Get Started</span>
                         <ChevronsRight className="w-7 h-7 rounded-full p-1 bg-gradient-to-t from-[#cbcccd] via-black to-[#030e29]" />
                     </motion.button>
                     <motion.button
                         whileHover={{ scale: 1.1 }}
-                        className="bg-white hover:bg-gray-50 text-[#1e40af] px-8 py-3 rounded-full font-medium border border-gray-200 transition-colors shadow-sm outline-8 outline-blue-500"
+                        className="bg-white hover:bg-gray-50 text-[#1e40af] px-8 py-3 rounded-full text-lg border border-gray-200 transition-colors font-montserrat shadow-sm outline-8 font-bold outline-blue-500"
                     >
-                        {t('hero.cta.scheduleDemo')}
+                        Schedule a Demo
                     </motion.button>
                 </div>
             </motion.div>
