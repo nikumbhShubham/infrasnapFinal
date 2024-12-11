@@ -68,47 +68,45 @@ def parse_sub_stage_progress(text, stage):
     return sub_stages, sub_stage_name
 
 
-# Prompt template for analyzing the construction stage
-PROMPT_TEMPLATE = """
-Analyze the uploaded image and determine the current stage of construction. For each stage, provide the following details:
-
-- **Stage**: <stage> (One of: Foundation, SubStructure, Plinth, SuperStructure, Finishing)
-- **Activity**: <activity> (Describe the current activity at the stage in 2/3 words).
-- **Components**: <components> (List the components involved at this stage in 4/5 words).
-- **Sub_Stage_name**: <sub_stage> Identify the sub-stages for the given stage.
-- **Overall progress percentage**: Provide the overall progress percentage.
+# Prompt template for analyzing the construction stage in videos
+PROMPT_TEMPLATE_VIDEO = """ PLS START PRINTING THE RESULT WITH:-
+- *Stage*: <stage> (One of: Foundation, SubStructure, Plinth, SuperStructure, Finishing)
+- *Activity*: <activity> (Describe the current activity at the stage in 2/3 words).
+- *Components*: <components> (List the components involved at this stage in 4/5 words).
+- *Sub_Stage_name*: <sub_stage> Identify the sub-stages for the given stage.
+- *Overall progress percentage*: Provide the overall progress percentage.
 
 For the following sub-stages, calculate and provide progress percentages:
 
-**Foundation Stage Sub-Stages**:
+*Foundation Stage Sub-Stages*:
 - Excavation
 - Base Preparation (Compaction and leveling)
 - Reinforcement Placement (Footings and plinth beams)
 - Formwork Installation
 - Concrete Pouring and Curing
 
-**Sub-Structure Stage Sub-Stages**:
+*Sub-Structure Stage Sub-Stages*:
 - Plinth Beam Construction
 - Backfilling and Compaction
 - Retaining Walls (if applicable)
 - Waterproofing and Damp-Proofing
 - Preparation for the Transition Stage
 
-**Plinth Level Stage Sub-Stages**:
+*Plinth Level Stage Sub-Stages*:
 - Plinth Filling and Compaction
 - PCC (Plain Cement Concrete) or Floor Base Preparation
 - Anti-Termite Treatment (if applicable)
 - Utility Installation (Drainage pipes, electrical conduits, water lines under the plinth)
 - Ground Level Finishing (Plinth band protection and preparation for vertical construction)
 
-**Superstructure Stage Sub-Stages**:
+*Superstructure Stage Sub-Stages*:
 - Column Construction
 - Beam and Slab Construction
 - Roof Construction
 - Wall Construction (External and Internal)
 - Lintels and Chajjas
 
-**Finishing Stage Sub-Stages**:
+*Finishing Stage Sub-Stages*:
 - Plastering and Painting
 - Flooring and Tiling
 - Door and Window Installation
@@ -116,68 +114,117 @@ For the following sub-stages, calculate and provide progress percentages:
 - Fixtures and Furnishings (Cabinets, countertops, lighting, etc.)
 
 Return the overall progress percentage for the entire stage and the progress percentages for each sub-stage.
-If the image does not correspond to any of the above stages, respond with: **"ERROR: Not a valid construction stage image."**
+If the video does not correspond to any of the above stages, respond with: *"ERROR: Not a valid construction stage video."*
 """
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
 
-    image_file = request.files['image']
-    if image_file.filename == '':
+    file = request.files['file']
+    if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
 
     try:
-        # Save the file temporarily
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
-           image_path = temp_file.name
-           image_file.save(image_path)
+        file_extension = file.filename.rsplit('.', 1)[-1].lower()
+        is_image = False
 
-        # Run analysis using Gemini API
-        uploaded_file = genai.upload_file(path=image_path, display_name="Uploaded Image")
-        print(f"Uploaded file URI: {uploaded_file.uri}")
+        # Handle image file
+        if file_extension in ['jpg', 'jpeg', 'png']:
+            is_image = True
+            # Save the image temporarily
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                image_path = temp_file.name
+                file.save(image_path)
 
-        # Generate prompt for analysis using Gemini
-        model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest")
-        prompt = PROMPT_TEMPLATE
-        response = model.generate_content([uploaded_file, prompt])
+            # Run analysis using Gemini API
+            uploaded_file = genai.upload_file(path=image_path, display_name="Uploaded Image")
+            model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest")
+            prompt = PROMPT_TEMPLATE_VIDEO
+            response = model.generate_content([uploaded_file, prompt])
 
-        # Clean up temporary file
-        os.remove(image_path)
+            # Clean up temporary file
+            os.remove(image_path)
+
+        # Handle video file
+        elif file_extension in ['mp4', 'avi', 'mov', 'mkv']:
+            # Save the video temporarily
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+                video_path = temp_file.name
+                file.save(video_path)
+
+            # Run analysis using Gemini API
+            uploaded_file = genai.upload_file(path=video_path, display_name="Uploaded Video")
+
+            import time
+
+            # Check whether the file is ready to be used.
+            while uploaded_file.state.name == "PROCESSING":
+                print('.', end='')
+                time.sleep(10)
+                uploaded_file = genai.get_file(uploaded_file.name)
+
+            if uploaded_file.state.name == "FAILED":
+                raise ValueError(uploaded_file.state.name)
+
+            model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest")
+            prompt = PROMPT_TEMPLATE_VIDEO
+            response = model.generate_content([uploaded_file, prompt],
+                                              request_options={"timeout": 600})
+
+            # Clean up temporary file
+            os.remove(video_path)
+
+        else:
+            return jsonify({"error": "Invalid file format. Only image or video files are allowed."}), 400
 
         if response and response.text:
-            print("Raw response from GoogleVLM API:", response.text)
+            print("Raw response from Gemini API:", response.text)
 
-            # Parse the response for stage, activity, components, and progress
+            # Parse response based on file type
             lines = response.text.strip().split("\n")
-            stage = lines[0].split(":")[-1].strip()
-            activity = lines[1].split(":")[-1].strip()
-            components = lines[2].split(":")[-1].strip()
-            sub_stage = lines[3].split(":")[-1].strip()
+            if is_image:
+                # Parsing logic for images
+                stage = lines[0].split(":")[-1].strip()
+                activity = lines[1].split(":")[-1].strip()
+                components = lines[2].split(":")[-1].strip()
+                sub_stage = lines[3].split(":")[-1].strip()
+                progress_perc = lines[4].split(":")[-1].strip()
+            else:
+                # Parsing logic for videos
+                stage = lines[2].split(":**")[-1].strip()
+                activity = lines[3].split(":**")[-1].strip()
+                components = lines[4].split(":**")[-1].strip()
+                sub_stage = lines[5].split(":**")[-1].strip()
+                progress_perc = lines[6].split(":**")[-1].strip()
 
             # Extract the progress for sub-stages
             sub_stage_progress, sub_stage_name = parse_sub_stage_progress(response.text, stage)
 
-            # Calculate overall progress by averaging the sub-stage progress
-            overall_progress = sum(sub_stage_progress.values()) / len(sub_stage_progress)
+            # Ensure there is progress data to avoid division by zero
+            if sub_stage_progress:
+                # Calculate overall progress by averaging the sub-stage progress
+                overall_progress = sum(sub_stage_progress.values()) / len(sub_stage_progress)
+            else:
+                overall_progress = 0  # Default to 0% if no sub-stage progress data is found
 
             return jsonify({
                 "stage": stage,
                 "activity": activity,
                 "components": components,
                 "sub_stage_name": sub_stage,
-                "overall_progress": f"{overall_progress:.2f}%",
+                "overall_progress": progress_perc,
                 "sub_stage_progress": sub_stage_progress
             }), 200
 
         else:
             print("Error: No response from Gemini API.")
-            return jsonify({"error": "Failed to analyze the image."}), 500
+            return jsonify({"error": "Failed to analyze the video."}), 500
 
     except Exception as e:
         print(f"Error during processing: {str(e)}")
-        return jsonify({"error": f"Error processing image: {str(e)}"}), 500
+        return jsonify({"error": f"Error processing file: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
