@@ -133,7 +133,7 @@ import FoundationDashboard from "./routes/dashboard/stages/FoundationDashboard";
 import SubStructureDashboard from "./routes/dashboard/stages/SubStructureDashboard";
 import SuperStructureDashboard from "./routes/dashboard/stages/SuperStructureDashboard";
 import PlinthDashboard from "./routes/dashboard/stages/PlinthDahsboard";
-
+import ReportPage from "./routes/dashboard/stages/ReportPage";
 function App() {
     const [isLoading, setIsLoading] = useState(true);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -171,13 +171,20 @@ function App() {
             path: "/form2",
             element: <RawMaterial />,
         },
-        // Dashboard Routes
         {
-            path: "/dashboard",
-            element: <Layout />,
+        
+            path: "reportPage",
+            element: <ReportPage />
+        },
+
+        
+// Dashboard Routes
+{
+    path: "/dashboard",
+        element: <Layout />,
             children: [
 
-                { path: "page", index: true, element: <Sites /> },
+                { path: "page", index: true, element: <DashboardPage /> },
                 { path: "analytics", element: <DailyReportPage /> },
                 { path: "reports", element: <RawMaterialsPage /> },
                 { path: "upload", element: < UploadImagePage /> },
@@ -185,10 +192,10 @@ function App() {
                 { path: "page", index: true, element: <DashboardPage /> },
                 { path: "Sites", element: <Sites /> },
                 { path: "analytics", element: <DailyReportPage /> },
-                { path: "foundation", element:<FoundationDashboard/> },
-                { path: "substructure", element:<SubStructureDashboard/> },
-                { path: "superstructure", element:<SuperStructureDashboard/> },
-                { path: "plinth", element:<PlinthDashboard/> },
+                { path: "foundation", element: <FoundationDashboard /> },
+                { path: "substructure", element: <SubStructureDashboard /> },
+                { path: "superstructure", element: <SuperStructureDashboard /> },
+                { path: "plinth", element: <PlinthDashboard /> },
 
                 { path: "customers", element: <h1 className="title">Customers</h1> },
                 { path: "new-customer", element: <h1 className="title">New Customer</h1> },
@@ -201,23 +208,23 @@ function App() {
         },
     ]);
 
-    return (
+return (
 
 
-        <main>
-            <CustomCursor />
-            <ThemeProvider storageKey="theme">
-                {isLoading ? (
-                    <LoadingScreen onComplete={handleLoadingComplete} />
-                ) : isVideoPlaying ? (
-                    <VideoLoader onComplete={handleVideoComplete} />
-                ) : (
-                    <RouterProvider router={router} />
-                )}
-            </ThemeProvider>
-        </main>
+    <main>
+        <CustomCursor />
+        <ThemeProvider storageKey="theme">
+            {isLoading ? (
+                <LoadingScreen onComplete={handleLoadingComplete} />
+            ) : isVideoPlaying ? (
+                <VideoLoader onComplete={handleVideoComplete} />
+            ) : (
+                <RouterProvider router={router} />
+            )}
+        </ThemeProvider>
+    </main>
 
-    );
+);
 }
 
 export default App;

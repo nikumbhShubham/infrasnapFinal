@@ -183,235 +183,104 @@ const Sites = () => {
   };
 
   return (
-    <section>
-      <h2>
-        Hello {user.displayName}, kaise ho bhai
-      </h2>
-      <div className="flex flex-col md:flex-row items-center justify-around m-8">
-        {/* Create Project Card */}
-        <div className="w-[250px] h-[250px] border border-blue-200 rounded-lg shadow-lg hover:shadow-2xl flex flex-col items-center">
-          <button onClick={toggleModal}>
-            <img
-              src="/assets/about.jpg"
-              alt=""
-              className="p-2 w-full max-w-8xl mx-auto mt-2"
-            />
-            <h2 className="text-xl font-semibold m-4">Create Project</h2>
-          </button>
-        </div>
+    <section className="p-6 bg-gray-100 min-h-screen">
+    <div className="text-center mb-8">
+      <h1 className="text-3xl font-bold text-gray-800">Welcome, {user?.displayName}!</h1>
+      <p className="text-gray-600">Manage your projects efficiently and effortlessly.</p>
+    </div>
 
-        {/* Continue Project Card */}
-        <div className="w-[250px] h-[250px] border border-blue-200 rounded-lg shadow-lg hover:shadow-2xl flex flex-col items-center">
-          <button onClick={toggleContinueModal}>
-            <img
-              src="/assets/about.jpg"
-              alt=""
-              className="p-2 w-full max-w-8xl mx-auto mt-2"
-            />
-            <h2 className="text-xl font-semibold m-4">Continue Project</h2>
-          </button>
-        </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div
+        className="bg-white border rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-2xl transition"
+        onClick={toggleModal}
+      >
+        <h2 className="text-xl font-semibold text-blue-600 mb-4">Create New Project</h2>
+        <p className="text-gray-500">Start a new project and bring your ideas to life.</p>
       </div>
+      <div
+        className="bg-white border rounded-lg shadow-lg p-6 cursor-pointer hover:shadow-2xl transition"
+        onClick={() => navigate("/dashboard")}
+      >
+        <h2 className="text-xl font-semibold text-green-600 mb-4">Continue Existing Project</h2>
+        <p className="text-gray-500">Pick up where you left off and continue your progress.</p>
+      </div>
+    </div>
 
-      <h2 className="flex items-center justify-center mt-10 text-4xl font-bold">
-        Your Sites
-      </h2>
+    <h2 className="text-2xl font-semibold text-gray-800 mb-6">Your Sites</h2>
 
-      <div className="flex flex-wrap items-center justify-center m-8 p-4 gap-6 h-[400px] overflow-y-scroll border border-gray-300 rounded-lg shadow-lg">
-        {/* Dynamic Project Cards */}
-        {userSites.map((site) => (
-          <div
-            key={site.id}
-            className="w-[250px] h-[250px] border border-blue-200 rounded-lg shadow-lg hover:shadow-2xl flex flex-col items-center cursor-pointer"
-            onClick={() => handleSiteCardClick(site.id)} // Add click handler
-          >
-            <img
-              src={site.sitePlanImageUrl}
-              alt={site.siteName}
-              className="p-2 w-full max-w-8xl mx-auto mt-2"
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {userSites.map((site) => (
+        <div
+          key={site.id}
+          className="bg-white border rounded-lg shadow-lg hover:shadow-2xl transition p-4 cursor-pointer"
+          onClick={() => handleSiteCardClick(site.id)}
+        >
+          <img
+            src={site.sitePlanImageUrl || "/placeholder.png"}
+            alt={site.siteName}
+            className="w-full h-32 object-cover rounded-md mb-4"
+          />
+          <h3 className="text-lg font-semibold text-gray-800">{site.siteName}</h3>
+          <p className="text-gray-500 text-sm">{site.city}, {site.state}</p>
+        </div>
+      ))}
+    </div>
+
+    {isModalOpen && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-[90%] max-w-lg">
+          <h2 className="text-2xl font-semibold mb-4">Create New Project</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              name="siteName"
+              value={formData.siteName}
+              onChange={handleInputChange}
+              placeholder="Site Name"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <h2 className="text-xl font-semibold m-4">{site.siteName}</h2>
-          </div>
-        ))}
-
-
-        {/* Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white/50 backdrop-blur-lg p-8 rounded-lg w-[90%] max-w-3xl shadow-lg max-h-screen overflow-y-auto">
-              <span className="absolute cursor-pointer px-4 py-2 top-2 right-2 text-xl font-semibold rounded-lg " onClick={toggleModal}  >X</span>
-              <h2 className="text-2xl font-bold mb-4 text-center">
-                {isContinueModal ? "Continue Your Project" : "Create New Project"}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Site Name */}
-                <div>
-                  <label className="block text-sm font-medium">Site Name</label>
-                  <input
-                    type="text"
-                    name="siteName"
-                    value={formData.siteName}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter site name"
-                  />
-                </div>
-
-                {/* Dynamic Buildings */}
-                <div>
-                  <label className="block text-sm font-medium">Buildings and Floors</label>
-                  {buildings.map((building, index) => (
-                    <div
-                      key={building.id}
-                      className="flex items-center space-x-4 mb-4"
-                    >
-                      <span className="text-gray-600 font-medium">
-                        Building {index + 1}
-                      </span>
-                      <input
-                        type="number"
-                        value={building.floors}
-                        onChange={(e) =>
-                          updateFloors(building.id, Number(e.target.value))
-                        }
-                        min="1"
-                        className="w-20 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Floors"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeBuilding(building.id)}
-                        className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                      >
-                        -
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addBuilding}
-                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                  >
-                    + Add Building
-                  </button>
-                </div>
-
-                {/* Current Stage of Construction (only for Continue Project) */}
-                {isContinueModal && (
-                  <div>
-                    <label className="block text-sm font-medium">
-                      Current Stage of Construction
-                    </label>
-                    <input
-                      type="text"
-                      name="currentStage"
-                      value={formData.currentStage}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter current stage"
-                    />
-                  </div>
-                )}
-
-                {/* City */}
-                <div>
-                  <label className="block text-sm font-medium">City</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter city"
-                  />
-                </div>
-
-                {/* State */}
-                <div>
-                  <label className="block text-sm font-medium">State</label>
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter state"
-                  />
-                </div>
-
-                {/* Country */}
-                <div>
-                  <label className="block text-sm font-medium">Country</label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter country"
-                  />
-                </div>
-
-                {/* Final Site Plan Image */}
-                <div>
-                  <label className="block text-sm font-medium">
-                    Final Site Plan Image
-                  </label>
-                  <input
-                    type="file"
-                    name="sitePlanImage"
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Deadline */}
-                <div>
-                  <label className="block text-sm font-medium">Deadline</label>
-                  <input
-                    type="date"
-                    name="deadline"
-                    value={formData.deadline}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Budget */}
-                <div>
-                  <label className="block text-sm font-medium">Budget</label>
-                  <input
-                    type="number"
-                    name="budget"
-                    value={formData.budget}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter budget"
-                  />
-                </div>
-
-                {/* Submit Buttons */}
-                <div className="flex justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={toggleModal}
-                    className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
+            <input
+              type="text"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              placeholder="City"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleInputChange}
+              placeholder="State"
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="file"
+              name="sitePlanImage"
+              onChange={handleInputChange}
+              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={toggleModal}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Submit
+              </button>
             </div>
-          </div>
-        )}
+          </form>
+        </div>
       </div>
-    </section>
+    )}
+  </section>
   );
 };
 
